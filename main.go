@@ -22,7 +22,7 @@ var db *sqlx.DB
 // User struct to map user data
 type User struct {
 	ID        int    `db:"id" json:"id"`
-	Email     string `db:"email" json:"email" binding:"required,email"`
+	Email     string `db:"email" json:"email" binding:"required"`
 	Password  string `db:"password" json:"password" binding:"required"`
 	CreatedAt string `db:"created_at" json:"created_at"`
 	UpdatedAt string `db:"updated_at" json:"updated_at"`
