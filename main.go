@@ -3,17 +3,17 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gin-contrib/cors"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -30,20 +30,35 @@ type User struct {
 
 // Initialize database connection
 func initDB() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+	dbHost, exists := os.LookupEnv("DB_HOST")
+	if !exists {
+		log.Fatalf("DB_HOST environment variable not set")
 	}
 
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
+	dbPort, exists := os.LookupEnv("DB_PORT")
+	if !exists {
+		log.Fatalf("DB_PORT environment variable not set")
+	}
+
+	dbUser, exists := os.LookupEnv("DB_USER")
+	if !exists {
+		log.Fatalf("DB_USER environment variable not set")
+	}
+
+	dbPassword, exists := os.LookupEnv("DB_PASSWORD")
+	if !exists {
+		log.Fatalf("DB_PASSWORD environment variable not set")
+	}
+
+	dbName, exists := os.LookupEnv("DB_NAME")
+	if !exists {
+		log.Fatalf("DB_NAME environment variable not set")
+	}
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
 
+	var err error
 	db, err = sqlx.Connect("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Could not connect to database: %v", err)
@@ -52,11 +67,30 @@ func initDB() {
 
 // Function to run migrations
 func runMigrations() {
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
+	dbHost, exists := os.LookupEnv("DB_HOST")
+	if !exists {
+		log.Fatalf("DB_HOST environment variable not set")
+	}
+
+	dbPort, exists := os.LookupEnv("DB_PORT")
+	if !exists {
+		log.Fatalf("DB_PORT environment variable not set")
+	}
+
+	dbUser, exists := os.LookupEnv("DB_USER")
+	if !exists {
+		log.Fatalf("DB_USER environment variable not set")
+	}
+
+	dbPassword, exists := os.LookupEnv("DB_PASSWORD")
+	if !exists {
+		log.Fatalf("DB_PASSWORD environment variable not set")
+	}
+
+	dbName, exists := os.LookupEnv("DB_NAME")
+	if !exists {
+		log.Fatalf("DB_NAME environment variable not set")
+	}
 
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		dbUser, dbPassword, dbHost, dbPort, dbName)
@@ -95,7 +129,14 @@ func main() {
 	r := gin.Default()
 
 	// Configure CORS middleware
-	r.Use(cors.Default())
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	r.POST("/api/user", func(c *gin.Context) {
 		var user User
