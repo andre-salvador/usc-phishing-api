@@ -141,6 +141,7 @@ func main() {
 	r.POST("/api/user", func(c *gin.Context) {
 		var user User
 		if err := c.ShouldBindJSON(&user); err != nil {
+			log.Printf("Error binding JSON: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -148,23 +149,31 @@ func main() {
 		query := `INSERT INTO users (email, password) VALUES ($1, $2)`
 		_, err := db.Exec(query, user.Email, user.Password)
 		if err != nil {
+			log.Printf("Error inserting user into database: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert user"})
 			return
 		}
 
+		log.Printf("User registered: %s", user.Email)
 		c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 	})
 
 	r.GET("/api/users", func(c *gin.Context) {
 		var users []User
-		err := db.Select(&users, "SELECT id, email, password FROM users")
+		err := db.Select(&users, "SELECT id, email, password, created_at, updated_at FROM users")
 		if err != nil {
+			log.Printf("Error fetching users: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
 			return
 		}
 
+		log.Printf("Fetched %d users", len(users))
 		c.JSON(http.StatusOK, users)
 	})
 
-	r.Run(":8080")
+	err := r.Run(":8080")
+	if err != nil {
+		log.Fatalf("Failed to run server: %v", err)
+	}
+	log.Println("Server started on port 8080")
 }
