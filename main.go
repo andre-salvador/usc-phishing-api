@@ -24,8 +24,6 @@ type User struct {
 	ID        int    `db:"id" json:"id"`
 	Email     string `db:"email" json:"email" binding:"required"`
 	Password  string `db:"password" json:"password" binding:"required"`
-	CreatedAt string `db:"created_at" json:"created_at"`
-	UpdatedAt string `db:"updated_at" json:"updated_at"`
 }
 
 // Initialize database connection
@@ -160,7 +158,7 @@ func main() {
 
 	r.GET("/api/users", func(c *gin.Context) {
 		var users []User
-		err := db.Select(&users, "SELECT id, email, password, created_at, updated_at FROM users")
+		err := db.Select(&users, "SELECT id, email, password")
 		if err != nil {
 			log.Printf("Error fetching users: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
